@@ -82,4 +82,4 @@ episode.json + 대표 이미지
 
 ## 라이선스
 
-미정 (문의 환영)
+[MIT](LICENSE)
