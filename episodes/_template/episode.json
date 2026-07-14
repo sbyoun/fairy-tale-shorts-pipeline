@@ -1,0 +1,196 @@
+{
+  "id": "{{EPISODE_ID}}",
+  "title": "{{TITLE}}",
+  "series_title": "{{SERIES_TITLE}}",
+  "show_overlay": false,
+  "audio": {
+    "tts_provider": "elevenlabs",
+    "elevenlabs_model": "eleven_v3",
+    "elevenlabs_output_format": "mp3_44100_128",
+    "bgm": {
+      "enabled": true,
+      "preset": "music_box",
+      "volume": 0.03,
+      "start_delay": 0.8,
+      "fade_in": 1.6
+    },
+    "auto_sfx": true,
+    "sfx_volume": 0.2
+  },
+  "style_prompt": "clean 2D cartoon animation still, friendly preschool TV cartoon look, bold rounded shapes, soft cel shading, expressive faces, simple readable backgrounds, consistent character design, bright but not pastel watercolor, 9:16 vertical frame, no text, no watermark",
+  "image_generation": {
+    "shot_focus": "speaker_closeup",
+    "style_prompt": "clean 2D cartoon animation still, friendly preschool TV cartoon look, bold rounded shapes, soft cel shading, expressive faces, simple readable backgrounds, consistent character design, bright but not pastel watercolor, not crayon texture, not vector placeholder art, 9:16 vertical frame, no text, no watermark",
+    "composition": "9:16 vertical mobile frame, medium close-up on the current speaker for dialogue lines, face and hands visible, simple background with one story prop, stable character design",
+    "lighting": "bright clear cartoon lighting, playful but calm preschool animation mood",
+    "constraints": "no readable text, no captions, no speech bubbles, no logos, no watermark, no scary content, no realistic child likeness, no extra characters unless explicitly named",
+    "continuity_rule": "Preserve the same clean cartoon world, stable character proportions, same outfits, and same recurring props across all shots.",
+    "character_rule": "Only show characters explicitly named in the scene; avoid parents, extra siblings, pets, crowds, or random background children unless the scene specifically asks for them."
+  },
+  "character_bible": "Define the protagonist and supporting cast here before image generation. Keep names, outfits, age range, and key props stable. Avoid extra parents, siblings, pets, or background children unless explicitly required by the episode.",
+  "voice_profiles": {
+    "narrator": {
+      "elevenlabs_voice_id": "JBFqnCBsd6RMkjVDRZzb",
+      "elevenlabs_voice_name": "George",
+      "elevenlabs_tags": "[warm storyteller] [gentle] [slightly playful] [clear Korean narration]",
+      "instructions": "Warm Korean children's-book narrator. Gentle, clear, expressive, slightly playful, never rushed.",
+      "image_focus": "a wide establishing view that clearly shows the main character, the current story prop, and the setting",
+      "stability": 0.5,
+      "similarity_boost": 0.78,
+      "style": 0.28,
+      "use_speaker_boost": true
+    },
+    "protagonist": {
+      "character_name": "the protagonist",
+      "elevenlabs_voice_id": "cgSgspJ2msm6clMCkdW9",
+      "elevenlabs_voice_name": "Jessica",
+      "elevenlabs_tags": "[bright] [curious] [childlike wonder] [friendly]",
+      "instructions": "Bright Korean child character performance. Clear diction, lively but not exaggerated.",
+      "image_focus": "a medium close-up of the protagonist, expressive face centered, hands visible with the episode's key prop",
+      "stability": 0.36,
+      "similarity_boost": 0.82,
+      "style": 0.62,
+      "use_speaker_boost": true
+    },
+    "caregiver": {
+      "character_name": "the caregiver",
+      "elevenlabs_voice_id": "XrExE9yKIg1WjnnlVkGX",
+      "elevenlabs_voice_name": "Matilda",
+      "elevenlabs_tags": "[calm] [warm] [practical adult] [reassuring]",
+      "instructions": "Kind Korean adult caregiver voice. Calm, practical, warm but slightly formal.",
+      "image_focus": "a medium close-up of the caregiver speaking calmly with a practical teaching gesture",
+      "stability": 0.56,
+      "similarity_boost": 0.8,
+      "style": 0.32,
+      "use_speaker_boost": true
+    },
+    "friend_1": {
+      "character_name": "first friend",
+      "elevenlabs_voice_id": "FGY2WhTYpPnrIDTdsKH5",
+      "elevenlabs_voice_name": "Laura",
+      "elevenlabs_tags": "[cheerful] [slightly chatty] [friendly]",
+      "instructions": "Friendly Korean supporting child or older-sibling voice.",
+      "image_focus": "a medium close-up of the first friend speaking cheerfully, clear expression and simple background",
+      "stability": 0.35,
+      "similarity_boost": 0.76,
+      "style": 0.7,
+      "use_speaker_boost": true
+    },
+    "friend_2": {
+      "character_name": "second friend",
+      "elevenlabs_voice_id": "hpp4J3VqNfWAUOO0d1Us",
+      "elevenlabs_voice_name": "Bella",
+      "elevenlabs_tags": "[friendly] [bright] [clear]",
+      "instructions": "Friendly, upbeat Korean supporting character voice.",
+      "image_focus": "a medium close-up of the second friend speaking clearly, with one relevant story prop nearby",
+      "stability": 0.38,
+      "similarity_boost": 0.78,
+      "style": 0.62,
+      "use_speaker_boost": true
+    },
+    "guide": {
+      "character_name": "the guide character",
+      "elevenlabs_voice_id": "pFZP5JQG7iQjIQuC4Bku",
+      "elevenlabs_voice_name": "Lily",
+      "elevenlabs_tags": "[softly] [teacher-like] [reassuring]",
+      "instructions": "Gentle Korean guide or fairy-teacher voice. Careful and encouraging.",
+      "image_focus": "a medium close-up of the guide character explaining gently with a clear teacher-like gesture",
+      "stability": 0.42,
+      "similarity_boost": 0.78,
+      "style": 0.58,
+      "use_speaker_boost": true
+    },
+    "animal": {
+      "character_name": "the animal side character",
+      "elevenlabs_voice_id": "EXAVITQu4vr4xnSDxMaL",
+      "elevenlabs_voice_name": "Sarah",
+      "elevenlabs_tags": "[tiny] [playful] [quick]",
+      "instructions": "Tiny playful Korean animal side-character voice. Short and cute.",
+      "image_focus": "a close-up of the animal side character reacting with small expressive paws or gestures",
+      "stability": 0.25,
+      "similarity_boost": 0.68,
+      "style": 0.9,
+      "use_speaker_boost": true
+    },
+    "royal_child": {
+      "character_name": "the royal child",
+      "elevenlabs_voice_id": "bIHbv24MWmeRgasZH58o",
+      "elevenlabs_voice_name": "Will",
+      "elevenlabs_tags": "[gentle] [curious] [friendly]",
+      "instructions": "Polite Korean young royal or friend character. Soft, curious, friendly, not formal or stiff.",
+      "image_focus": "a medium close-up of the royal child speaking politely, friendly expression, no romance",
+      "stability": 0.4,
+      "similarity_boost": 0.8,
+      "style": 0.48,
+      "use_speaker_boost": true
+    },
+    "clock": {
+      "character_name": "friendly clock",
+      "elevenlabs_voice_id": "nPczCjzI2devNBz1zQrb",
+      "elevenlabs_voice_name": "Brian",
+      "elevenlabs_tags": "[deep voice] [slow] [resonant] [friendly clock]",
+      "instructions": "Deep friendly Korean clock voice. Slow, rounded, storybook-like.",
+      "image_focus": "a large friendly clock as the main focus, showing the required time clearly",
+      "stability": 0.62,
+      "similarity_boost": 0.82,
+      "style": 0.34,
+      "use_speaker_boost": true
+    }
+  },
+  "description": "Draft episode generated from the production template.",
+  "tags": [
+    "고전동화",
+    "유튜브숏츠",
+    "대안동화"
+  ],
+  "scenes": [
+    {
+      "id": "scene_00",
+      "type": "title",
+      "duration_hint": 3,
+      "title_lines": [
+        "{{SERIES_TITLE}}",
+        "{{TITLE}}",
+        "부제 입력"
+      ],
+      "lines": [
+        {
+          "speaker": "narrator",
+          "text": "{{SERIES_TITLE}}. {{TITLE}}."
+        }
+      ]
+    },
+    {
+      "id": "scene_01",
+      "duration_hint": 8,
+      "beat": "도입",
+      "visual": "Main character and supporting cast in the ordinary fairy-tale setting, clean cartoon style, simple background, one key prop visible",
+      "lines": [
+        {
+          "speaker": "narrator",
+          "text": "여기에 도입 내레이션을 씁니다."
+        },
+        {
+          "speaker": "protagonist",
+          "text": "여기에 주인공 대사를 씁니다."
+        },
+        {
+          "speaker": "caregiver",
+          "text": "여기에 보호자 또는 어른 캐릭터 대사를 씁니다."
+        },
+        {
+          "speaker": "friend_1",
+          "text": "여기에 친구 대사를 씁니다."
+        },
+        {
+          "speaker": "protagonist",
+          "text": "여기에 주인공 반응을 씁니다."
+        },
+        {
+          "speaker": "narrator",
+          "text": "여기에 장면 마무리 내레이션을 씁니다."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+# secrets
+.env
+client_secret*.json
+.youtube_token.json
+.youtube_oauth_session.json
+
+# python
+.venv/
+__pycache__/
+*.pyc
+
+# generated episode assets
+episodes/*/images/*.png
+episodes/*/images/*.jpg
+episodes/*/build*/
+episodes/*/music/*.mp3
+episodes/*/music/*.wav
+episodes/*/automation/
+episodes/*/review/*.png
+!episodes/_template/**
+
+# logs
+*.log
+docs/metrics-log.jsonl
+docs/metrics-cron.log
