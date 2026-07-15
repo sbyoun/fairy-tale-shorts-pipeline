@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import math
 import os
@@ -45,6 +46,40 @@ def read_json(path: Path) -> dict[str, Any]:
 
 def write_json(path: Path, payload: Any) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+CACHE_MANIFEST_NAME = "cache-manifest.json"
+
+
+def input_hash(payload: Any) -> str:
+    canonical = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def load_cache_manifest(out_dir: Path) -> dict[str, str]:
+    path = out_dir / CACHE_MANIFEST_NAME
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    return {str(key): str(value) for key, value in data.items()}
+
+
+def cached_output_is_fresh(out_dir: Path, path: Path, digest: str) -> bool:
+    if not (path.exists() and path.stat().st_size > 0):
+        return False
+    key = str(path.relative_to(out_dir))
+    return load_cache_manifest(out_dir).get(key) == digest
+
+
+def record_cache_entry(out_dir: Path, path: Path, digest: str) -> None:
+    manifest = load_cache_manifest(out_dir)
+    manifest[str(path.relative_to(out_dir))] = digest
+    write_json(out_dir / CACHE_MANIFEST_NAME, manifest)
 
 
 def safe_float(value: Any, default: float) -> float:
@@ -728,18 +763,7 @@ def sfx_provider(episode: dict[str, Any]) -> str:
     return str(audio_cfg.get("sfx_provider") or "synth").strip().lower()
 
 
-def generate_elevenlabs_sfx(episode: dict[str, Any], spec: dict[str, Any], path: Path) -> None:
-    if path.exists() and path.stat().st_size > 0:
-        return
-
-    load_project_env()
-    api_key = os.environ.get("ELEVENLABS_API_KEY") or os.environ.get("ELEVEN_LABS_API_KEY")
-    if not api_key:
-        raise RuntimeError(
-            "audio.sfx_provider is 'elevenlabs', but ELEVENLABS_API_KEY is not set. "
-            "Put it in classic-fairy-tale-pc-shorts/.env or export it before rendering."
-        )
-
+def generate_elevenlabs_sfx(episode: dict[str, Any], spec: dict[str, Any], path: Path, out_dir: Path) -> None:
     prompt = str(spec.get("prompt") or "").strip()
     if not prompt:
         raise RuntimeError(f"ElevenLabs SFX preset '{spec.get('preset')}' requires a prompt.")
@@ -759,6 +783,18 @@ def generate_elevenlabs_sfx(episode: dict[str, Any], spec: dict[str, Any], path:
     if duration_seconds > 0:
         payload["duration_seconds"] = max(0.5, min(30.0, duration_seconds))
 
+    digest = input_hash({"kind": "elevenlabs_sfx", "payload": payload, "output_format": output_format})
+    if cached_output_is_fresh(out_dir, path, digest):
+        return
+
+    load_project_env()
+    api_key = os.environ.get("ELEVENLABS_API_KEY") or os.environ.get("ELEVEN_LABS_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "audio.sfx_provider is 'elevenlabs', but ELEVENLABS_API_KEY is not set. "
+            "Put it in classic-fairy-tale-pc-shorts/.env or export it before rendering."
+        )
+
     query = urllib.parse.urlencode({"output_format": output_format})
     request = urllib.request.Request(
         f"https://api.elevenlabs.io/v1/sound-generation?{query}",
@@ -776,6 +812,7 @@ def generate_elevenlabs_sfx(episode: dict[str, Any], spec: dict[str, Any], path:
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
         raise RuntimeError(f"ElevenLabs SFX failed for preset '{spec.get('preset')}': {detail}") from exc
+    record_cache_entry(out_dir, path, digest)
 
 
 def mix_shot_sfx(episode: dict[str, Any], shot: dict[str, Any], audio_path: Path, out_dir: Path, index: int) -> Path:
@@ -792,7 +829,7 @@ def mix_shot_sfx(episode: dict[str, Any], shot: dict[str, Any], audio_path: Path
         extension = ".mp3" if provider == "elevenlabs" else ".wav"
         sfx_path = sfx_dir / f"{index:03d}_{shot['id']}_{spec_index}_{spec['preset']}{extension}"
         if provider == "elevenlabs":
-            generate_elevenlabs_sfx(episode, spec, sfx_path)
+            generate_elevenlabs_sfx(episode, spec, sfx_path, out_dir)
         elif provider == "synth":
             render_sfx(sfx_path, preset=str(spec["preset"]), volume=1.0)
         else:
@@ -969,9 +1006,6 @@ def generate_elevenlabs_tts(episode: dict[str, Any], shots: list[dict[str, Any]]
         elevenlabs_tags = str(profile.get("elevenlabs_tags") or "").strip()
         directed_text = f"{elevenlabs_tags} {text}".strip() if elevenlabs_tags else text
         path = out_dir / f"audio_{idx:03d}_{shot['id']}_{speaker}.mp3"
-        if path.exists() and path.stat().st_size > 0:
-            paths.append(path)
-            continue
         payload = {
             "text": directed_text,
             "model_id": model,
@@ -982,6 +1016,17 @@ def generate_elevenlabs_tts(episode: dict[str, Any], shots: list[dict[str, Any]]
                 "use_speaker_boost": bool(profile["use_speaker_boost"]),
             },
         }
+        digest = input_hash(
+            {
+                "kind": "elevenlabs_tts",
+                "voice_id": profile["elevenlabs_voice_id"],
+                "payload": payload,
+                "output_format": output_format,
+            }
+        )
+        if cached_output_is_fresh(out_dir, path, digest):
+            paths.append(path)
+            continue
         request = urllib.request.Request(
             f"{endpoint_base}/{profile['elevenlabs_voice_id']}?output_format={output_format}",
             data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
@@ -998,6 +1043,7 @@ def generate_elevenlabs_tts(episode: dict[str, Any], shots: list[dict[str, Any]]
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")
             raise RuntimeError(f"ElevenLabs TTS failed for {shot.get('id')} ({speaker}): {detail}") from exc
+        record_cache_entry(out_dir, path, digest)
         paths.append(path)
     return paths
 
