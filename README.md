@@ -36,6 +36,8 @@ episode.json + 대표 이미지
 | `scripts/upload_youtube_short.py` | OAuth 인증과 유튜브 업로드 |
 | `scripts/record_metrics.py` | 채널/영상 지표를 JSONL로 주기 기록 (Data API + Analytics API) |
 
+승인 게이트(Gate A/B/C)와 자동화 구간·캐시 동작의 상세는 [docs/POST_CONCEPT_AUTOMATION.md](docs/POST_CONCEPT_AUTOMATION.md)를 참고하세요.
+
 ## 준비물
 
 1. Python 3.12+, ffmpeg

@@ -7,7 +7,8 @@ command, designed to run under scripts/background_job.py:
 1. make_episode.py --write-prompts-only
 2. generate_images_gemini.py (Gemini shot images with a style reference)
 3. make_episode.py full render (ElevenLabs TTS + SFX + voice/SFX video)
-4. Scale music/composition-plan.json chunk durations to the actual render length
+4. Scale a copy of music/composition-plan.json to the actual render length
+   (build-final/composition-plan.scaled.json — the source plan is preserved)
 5. finalize_episode.py (Music v2 + loudness-steady final MP4), stops at ready_for_review
 """
 from __future__ import annotations
@@ -45,7 +46,13 @@ def video_duration(path: Path) -> float:
     return float(result.stdout.strip())
 
 
-def scale_music_plan(episode_dir: Path, target_seconds: float, *, tail_seconds: float = 1.5) -> None:
+def scale_music_plan(episode_dir: Path, out_dir: Path, target_seconds: float, *, tail_seconds: float = 1.5) -> Path:
+    """Scale the composition plan to the render length.
+
+    The hand-written source plan (music/composition-plan.json) is never
+    modified; the scaled copy is written next to the render outputs and
+    its path is returned.
+    """
     plan_path = episode_dir / "music" / "composition-plan.json"
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     chunks = plan.get("chunks") or []
@@ -58,19 +65,22 @@ def scale_music_plan(episode_dir: Path, target_seconds: float, *, tail_seconds: 
     ratio = target_ms / current_ms
     if abs(ratio - 1.0) < 0.02:
         print(f"music plan already matches render ({current_ms}ms vs {target_ms}ms)", flush=True)
-        return
-    scaled = 0
-    for chunk in chunks[:-1]:
-        new_ms = max(3000, int(round(int(chunk["duration_ms"]) * ratio)))
-        chunk["duration_ms"] = new_ms
-        scaled += new_ms
-    chunks[-1]["duration_ms"] = max(3000, target_ms - scaled)
-    plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(
-        f"scaled music plan {current_ms}ms -> {sum(int(c['duration_ms']) for c in chunks)}ms "
-        f"(render {target_seconds:.1f}s + tail {tail_seconds:.1f}s)",
-        flush=True,
-    )
+    else:
+        scaled = 0
+        for chunk in chunks[:-1]:
+            new_ms = max(3000, int(round(int(chunk["duration_ms"]) * ratio)))
+            chunk["duration_ms"] = new_ms
+            scaled += new_ms
+        chunks[-1]["duration_ms"] = max(3000, target_ms - scaled)
+        print(
+            f"scaled music plan {current_ms}ms -> {sum(int(c['duration_ms']) for c in chunks)}ms "
+            f"(render {target_seconds:.1f}s + tail {tail_seconds:.1f}s)",
+            flush=True,
+        )
+    out_dir.mkdir(parents=True, exist_ok=True)
+    scaled_path = out_dir / "composition-plan.scaled.json"
+    scaled_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return scaled_path
 
 
 def main() -> int:
@@ -112,7 +122,7 @@ def main() -> int:
     voice_sfx = out_dir / f"{episode['id']}-voice-sfx.mp4"
     if not voice_sfx.exists():
         raise RuntimeError(f"Missing voice/SFX render: {voice_sfx}")
-    scale_music_plan(episode_dir, video_duration(voice_sfx))
+    scaled_plan = scale_music_plan(episode_dir, out_dir, video_duration(voice_sfx))
 
     run_step(
         "Music v2 + final mix",
@@ -123,6 +133,8 @@ def main() -> int:
             str(episode_path),
             "--out-dir",
             str(out_dir),
+            "--music-plan",
+            str(scaled_plan),
         ],
     )
     print("\npipeline complete: ready_for_review", flush=True)

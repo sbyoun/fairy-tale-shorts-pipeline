@@ -91,9 +91,12 @@ def ffprobe_video(path: Path) -> dict[str, Any]:
     return json.loads(result.stdout)
 
 
-def generate_music(episode: dict[str, Any], episode_dir: Path, *, log_path: Path) -> tuple[Path, Path]:
+def generate_music(
+    episode: dict[str, Any], episode_dir: Path, *, log_path: Path, plan_path: Path | None = None
+) -> tuple[Path, Path]:
     music_dir = episode_dir / "music"
-    plan_path = music_dir / "composition-plan.json"
+    if plan_path is None:
+        plan_path = music_dir / "composition-plan.json"
     if not plan_path.exists():
         raise RuntimeError(f"Missing Music v2 plan: {plan_path}")
 
@@ -193,7 +196,8 @@ def finalize(args: argparse.Namespace) -> int:
     if not voice_sfx_path.exists():
         raise RuntimeError(f"Missing voice/SFX render: {voice_sfx_path}")
 
-    source_music, steady_music = generate_music(episode, episode_dir, log_path=log_path)
+    music_plan = args.music_plan.resolve() if args.music_plan else None
+    source_music, steady_music = generate_music(episode, episode_dir, log_path=log_path, plan_path=music_plan)
     run(
         [
             "ffmpeg",
@@ -250,6 +254,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--episode", type=Path, required=True)
     parser.add_argument("--out-dir", type=Path, default=None)
     parser.add_argument("--log", type=Path, default=None)
+    parser.add_argument(
+        "--music-plan",
+        type=Path,
+        default=None,
+        help="Composition plan JSON to use (default: <episode dir>/music/composition-plan.json)",
+    )
     return parser.parse_args()
 
 
